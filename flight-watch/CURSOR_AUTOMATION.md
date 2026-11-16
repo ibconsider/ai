@@ -4,8 +4,8 @@ GitHub Actions 已負責每日快取價監控。若還想用 Cursor 雲端 Agent
 
 1. 打開 [cursor.com/automations](https://cursor.com/automations)
 2. **New automation**
-3. Trigger：**Scheduled** → 每天（建議台北時間 10:00，比 GitHub Actions 晚一小時）  
-   Cron 範例：`CRON_TZ=Asia/Taipei 0 10 * * *`
+3. Trigger：**Scheduled** → 每天（建議芬蘭時間 10:00，比 GitHub Actions 晚一小時）  
+   Cron 範例：`CRON_TZ=Europe/Helsinki 0 10 * * *`
 4. Repository：選 `ibconsider/ai`（本 repo）
 5. Tools：若有「Send email / Slack」可打開；否則看 Agent 執行結果即可
 6. Prompt 貼上下方全文
@@ -15,13 +15,13 @@ GitHub Actions 已負責每日快取價監控。若還想用 Cursor 雲端 Agent
 ## Prompt
 
 ```text
-你是機票價格核價助理。請檢查下列單程經濟艙（允許多趟轉機），並用「目的地國家語系＋當地貨幣」開啟 Google Flights 查價（不要只用台灣站／TWD），再換算成台幣回報。
+你是機票價格核價助理。去程赴台已訂妥；請檢查下列**回程**單程經濟艙（允許多趟轉機），並用「目的地國家語系＋當地貨幣」開啟 Google Flights 查價（不要只用台灣站／TWD），再換算成台幣回報。
 
 日期區間（出發）：2027-01-10 到 2027-02-03
 
 航線與門檻：
-1) 台北 TPE → 赫爾辛基 HEL：低於 18000 TWD
-2) 台北 TPE → 伊斯坦堡 IST：低於 10000 TWD
+1) 回程｜台北 TPE → 赫爾辛基 HEL：低於 18000 TWD
+2) 回程｜台北 TPE → 伊斯坦堡 IST：低於 10000 TWD
 
 查價方式（務必做）：
 - 芬蘭線：Google Flights 用 hl=fi、curr=EUR（可用 google.fi 或 google.com/travel/flights?hl=fi&curr=EUR）
