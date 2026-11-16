@@ -2,8 +2,9 @@ name: Flight price watch
 
 on:
   schedule:
-    # Every day 09:00 Asia/Taipei (UTC+8) = 01:00 UTC
-    - cron: "0 1 * * *"
+    # Every day 09:00 Europe/Helsinki.
+    # Jan–Mar (EET, UTC+2) => 07:00 UTC. GitHub cron is UTC-only.
+    - cron: "0 7 * * *"
   workflow_dispatch:
     inputs:
       notify:
