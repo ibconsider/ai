@@ -1,0 +1,43 @@
+{
+  "timezone": "Asia/Taipei",
+  "tripType": "one_way",
+  "cabin": "Economy",
+  "adults": 1,
+  "dateRange": {
+    "start": "2027-01-10",
+    "end": "2027-02-03"
+  },
+  "routes": [
+    {
+      "id": "tpe-hel",
+      "label": "台灣 → 芬蘭",
+      "origin": "TPE",
+      "destination": "HEL",
+      "thresholdTwd": 18000,
+      "allowTransfers": true,
+      "markets": [
+        { "market": "fi", "currency": "eur", "locale": "fi", "label": "芬蘭站 (EUR)" },
+        { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
+        { "market": "us", "currency": "usd", "locale": "en", "label": "美國站 (USD)" }
+      ]
+    },
+    {
+      "id": "tpe-ist",
+      "label": "台灣 → 土耳其",
+      "origin": "TPE",
+      "destination": "IST",
+      "thresholdTwd": 10000,
+      "allowTransfers": true,
+      "markets": [
+        { "market": "tr", "currency": "try", "locale": "tr", "label": "土耳其站 (TRY)" },
+        { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
+        { "market": "us", "currency": "usd", "locale": "en", "label": "美國站 (USD)" }
+      ]
+    }
+  ],
+  "alert": {
+    "cooldownHours": 24,
+    "githubIssueLabels": ["flight-alert"],
+    "titlePrefix": "✈️ 機票達標"
+  }
+}

@@ -1,0 +1,83 @@
+name: Flight price watch
+
+on:
+  schedule:
+    # Every day 09:00 Asia/Taipei (UTC+8) = 01:00 UTC
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      notify:
+        description: "Create/update GitHub issues when under threshold"
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - "flight-watch/**"
+      - ".github/workflows/flight-watch.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  dry-run:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax + dry-run
+        run: |
+          node --check flight-watch/check.mjs
+          node --check flight-watch/lib/fx.mjs
+          node --check flight-watch/lib/travelpayouts.mjs
+          node --check flight-watch/lib/links.mjs
+          node --check flight-watch/lib/github.mjs
+          node flight-watch/check.mjs --dry-run
+
+  check:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Require Travelpayouts token
+        env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+        run: |
+          if [ -z "$TRAVELPAYOUTS_TOKEN" ]; then
+            echo "::error::Missing repository secret TRAVELPAYOUTS_TOKEN"
+            echo "1. Free signup: https://www.travelpayouts.com/"
+            echo "2. Copy API token from profile"
+            echo "3. Repo Settings → Secrets and variables → Actions → New secret → TRAVELPAYOUTS_TOKEN"
+            exit 1
+          fi
+
+      - name: Run flight watch
+        env:
+          TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          SHOULD_NOTIFY: ${{ github.event_name == 'schedule' && 'true' || inputs.notify }}
+        run: |
+          if [ "$SHOULD_NOTIFY" = "true" ]; then
+            node flight-watch/check.mjs --notify
+          else
+            node flight-watch/check.mjs
+          fi
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-watch-report
+          path: flight-watch/out/latest.json
+          if-no-files-found: ignore
