@@ -2,10 +2,11 @@ name: Flight price watch
 
 on:
   schedule:
-    # 09:00 and 21:00 Europe/Helsinki in winter (EET = UTC+2).
-    # GitHub Actions cron is UTC-only.
-    - cron: "0 7 * * *"
-    - cron: "0 19 * * *"
+    # Every 2 hours (UTC). In Europe/Helsinki winter (UTC+2) that is
+    # 02,04,06,08,10,12,14,16,18,20,22,00 — about 12 checks/day.
+    # Cached fares still move; more frequent catches drops sooner.
+    # GitHub Actions cron is UTC-only and may run a bit late.
+    - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
       notify:
