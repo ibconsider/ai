@@ -1,8 +1,9 @@
 {
-  "timezone": "Asia/Taipei",
+  "timezone": "Europe/Helsinki",
   "tripType": "one_way",
   "cabin": "Economy",
   "adults": 1,
+  "notes": "Outbound to Taiwan already booked; watch return legs TPE→HEL / TPE→IST.",
   "dateRange": {
     "start": "2027-01-10",
     "end": "2027-02-03"
@@ -10,7 +11,7 @@
   "routes": [
     {
       "id": "tpe-hel",
-      "label": "台灣 → 芬蘭",
+      "label": "回程｜台灣 → 芬蘭",
       "origin": "TPE",
       "destination": "HEL",
       "thresholdTwd": 18000,
@@ -23,7 +24,7 @@
     },
     {
       "id": "tpe-ist",
-      "label": "台灣 → 土耳其",
+      "label": "回程｜台灣 → 土耳其",
       "origin": "TPE",
       "destination": "IST",
       "thresholdTwd": 10000,

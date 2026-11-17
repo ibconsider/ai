@@ -2,14 +2,20 @@ name: Flight price watch
 
 on:
   schedule:
-    # Every day 09:00 Asia/Taipei (UTC+8) = 01:00 UTC
-    - cron: "0 1 * * *"
+    # 09:00 and 21:00 Europe/Helsinki in winter (EET = UTC+2).
+    # GitHub Actions cron is UTC-only.
+    - cron: "0 7 * * *"
+    - cron: "0 19 * * *"
   workflow_dispatch:
     inputs:
       notify:
-        description: "Create/update GitHub issues when under threshold"
+        description: "Create/update GitHub issues + phone push when under threshold"
         type: boolean
         default: true
+      test_push:
+        description: "Send a test ntfy phone notification (no price check required)"
+        type: boolean
+        default: false
   pull_request:
     paths:
       - "flight-watch/**"
@@ -35,6 +41,7 @@ jobs:
           node --check flight-watch/lib/travelpayouts.mjs
           node --check flight-watch/lib/links.mjs
           node --check flight-watch/lib/github.mjs
+          node --check flight-watch/lib/ntfy.mjs
           node flight-watch/check.mjs --dry-run
 
   check:
@@ -50,6 +57,7 @@ jobs:
           node-version: "22"
 
       - name: Require Travelpayouts token
+        if: ${{ inputs.test_push != true }}
         env:
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
         run: |
@@ -61,11 +69,23 @@ jobs:
             exit 1
           fi
 
+      - name: Test ntfy phone push
+        if: ${{ inputs.test_push == true }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+        run: node flight-watch/test-ntfy.mjs
+
       - name: Run flight watch
+        if: ${{ inputs.test_push != true }}
         env:
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
           SHOULD_NOTIFY: ${{ github.event_name == 'schedule' && 'true' || inputs.notify }}
         run: |
           if [ "$SHOULD_NOTIFY" = "true" ]; then
@@ -75,7 +95,7 @@ jobs:
           fi
 
       - name: Upload report
-        if: always()
+        if: ${{ always() && inputs.test_push != true }}
         uses: actions/upload-artifact@v4
         with:
           name: flight-watch-report
