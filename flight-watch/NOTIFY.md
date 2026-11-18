@@ -32,9 +32,10 @@ https://github.com/ibconsider/ai/pull/4
 
 1. Discord 開啟「開發者模式」：設定 → 進階 → 開發者模式  
 2. 右鍵自己的頭像 → **複製使用者 ID**  
-3. 新增 secret：`DISCORD_USER_ID` = 那串數字  
+3. 新增／更新 secret：`DISCORD_USER_ID` = **只有數字**（約 17–20 位，不要加引號、空格、`<@...>`）  
+4. 你必須已加入該 Webhook 所在的伺服器，@ 才會成功  
 
-這樣達標訊息會 @你，手機較容易跳出聲音。
+若 ID 不對，系統會改成不 @ 你仍發送訊息。
 
 ### ⑤ 打開 Discord 手機通知
 
