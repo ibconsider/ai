@@ -1,57 +1,59 @@
-# 手機提示聲設定（請先合併 PR）
+# 手機提示聲設定（Discord）
 
-## 為什麼 email 沒聲音、又遲到？
+## 為什麼 email 沒聲音？
 
-1. **手機推播的 PR 還沒合併**時，系統只會開 GitHub Issue → 寄 email。Gmail／系統郵件常常**沒提示聲**，要你手動開收件匣才看得到。  
-2. GitHub Actions 排程常**延遲數十分鐘到數小時**（例如排 9:00，實際 10:00 才跑完寄信）。
+**PR #4 沒合併前**，達標只會開 GitHub Issue → 寄 email。Gmail 常常沒提示聲，Actions 也常晚跑。
 
-所以不要再只靠 email。請用下面至少一種**App 推播**。
+請改用 **Discord App 推播**。
 
 ---
 
-## 今天請做這三步
+## 今天請做
 
-### ① 合併這個 PR
+### ① 合併 PR
 
-https://github.com/ibconsider/ai/pull/4  
+https://github.com/ibconsider/ai/pull/4
 
-（舊的 PR #2 可關閉。）
+### ② 建立 Discord Webhook
 
-### ② 設定 Telegram（最推薦，上課也容易響）
+1. 打開 Discord（電腦或手機都行）
+2. 進你的伺服器 → 選一個頻道（建議新建 `#flight-alerts`）
+3. 頻道設定 → **整合 / Integrations** → **Webhook** → **新 Webhook**
+4. 複製 **Webhook URL**（形如 `https://discord.com/api/webhooks/...`）
 
-1. 手機打開 Telegram，搜尋 **`@BotFather`**
-2. 送 `/newbot`，照指示取名字 → 拿到 **token**（一長串）
-3. 到 GitHub secrets 新增：  
-   - `TELEGRAM_BOT_TOKEN` = 那串 token  
-   https://github.com/ibconsider/ai/settings/secrets/actions
-4. 在 Telegram 搜尋你的 bot，按 **Start**
-5. 用手機瀏覽器打開（把 `<TOKEN>` 換成你的 token）：  
-   `https://api.telegram.org/bot<TOKEN>/getUpdates`  
-   找到 `"chat":{"id": 一串數字` → 那就是 chat id
-6. 再新增 secret：`TELEGRAM_CHAT_ID` = 那串數字（可含負號）
-7. Telegram App：**設定 → 通知與聲音** → 開啟通知，允許聲音；勿開「靜音」／專注模式擋 Telegram
+### ③ 存進 GitHub Secret
 
-### ③ 測試推播
+1. https://github.com/ibconsider/ai/settings/secrets/actions  
+2. **New repository secret**  
+3. Name：`DISCORD_WEBHOOK_URL`  
+4. Value：貼上整段 Webhook URL → Save  
+
+### ④（強烈建議）讓通知 @你 — 比較會響
+
+1. Discord 開啟「開發者模式」：設定 → 進階 → 開發者模式  
+2. 右鍵自己的頭像 → **複製使用者 ID**  
+3. 新增 secret：`DISCORD_USER_ID` = 那串數字  
+
+這樣達標訊息會 @你，手機較容易跳出聲音。
+
+### ⑤ 打開 Discord 手機通知
+
+- Discord App → 設定 → 通知 → 開啟  
+- 該伺服器／`#flight-alerts`：**不要靜音**  
+- 系統層級允許 Discord 通知聲音；上課勿擾可把 Discord 設成例外  
+
+### ⑥ 測試
 
 1. https://github.com/ibconsider/ai/actions/workflows/flight-watch.yml  
 2. **Run workflow** → 勾選 **test_push** → Run  
-3. 手機應立刻收到 Telegram／ntfy 測試訊息
+3. 手機 Discord 應立刻跳出「機票監控測試推播」
 
 ---
 
-## 可選：再加一層保險
+## 可選備援
 
-| 管道 | Secret | 說明 |
-| --- | --- | --- |
-| **ntfy** | `NTFY_TOPIC` | 裝 [ntfy App](https://ntfy.sh/)，訂閱難猜 topic |
-| **Discord** | `DISCORD_WEBHOOK_URL` | 伺服器 → 頻道 → 整合 → Webhook |
+| Secret | 用途 |
+| --- | --- |
+| `NTFY_TOPIC` | 另裝 ntfy App 再加一層 |
 
-可三個都開；達標會同時推。
-
----
-
-## 注意
-
-- Email 可留著當備份，但**不要當第一通知**。  
-- 上課時請確認手機沒開勿擾，或允許 Telegram／ntfy **緊急通知例外**。  
-- 達標後請立刻點連結下訂；快取價會過期。
+不必設 Telegram。

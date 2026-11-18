@@ -16,13 +16,13 @@
 
 ## 手機提示聲（必做）
 
-完整步驟見 **[NOTIFY.md](./NOTIFY.md)**（Telegram 最推薦）。
+完整步驟見 **[NOTIFY.md](./NOTIFY.md)**（**Discord** 即可，不必 Telegram）。
 
 摘要：
 
 1. **先合併** https://github.com/ibconsider/ai/pull/4（沒合併＝永遠只有 email）
-2. 設定 `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（或 `NTFY_TOPIC`）
-3. Actions → 勾 **test_push** 確認手機會響
+2. 設定 `DISCORD_WEBHOOK_URL`（建議再加 `DISCORD_USER_ID` 以便 @你）
+3. Actions → 勾 **test_push** 確認 Discord 手機會響
 
 ## Travelpayouts token（若尚未設定）
 
