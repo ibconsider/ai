@@ -1,58 +1,61 @@
-# 手機提示聲（iPhone 靜音鍵開著也要響）
+# 手機提示聲（免費／可安裝別人做好的捷徑）
 
-## 為什麼 Discord／Cursor 不一樣？
+## 先講清楚：什麼能「一鍵安裝」？
 
-| 來源 | 靜音鍵開著 |
+| 類型 | 能分享 iCloud 連結嗎？ |
 | --- | --- |
-| **鬧鐘** | 會響（系統鬧鐘通道） |
-| **Cursor 跑完提示音** | 常會響（App 內媒體音，不是一般通知鈴） |
-| **Discord 通知** | **通常不響**（一般推播，遵守靜音鍵） |
+| **一般捷徑**（播放聲音、朗讀） | ✅ 可以，點連結 →「取得捷徑」 |
+| **個人自動化**（收到郵件時／電量低於 35%） | ❌ 通常不行完整分享（要綁**你自己的信箱／條件**） |
 
-所以：**Discord 適合「有訊息」**；要「靜音鍵開著也響」請加 **Pushover** 或 **ntfy Critical**。
+所以做法是：
 
-Discord 可繼續留著當備份（達標仍會在頻道出現）。
+1. **一鍵安裝**別人做好的「警報聲音」捷徑  
+2. 你只花 30 秒做自動化：**收到郵件（主旨含機票達標）→ 執行那個捷徑**
 
----
-
-## 方案 A：Pushover（最穩，約一次買斷）
-
-1. 手機裝 [Pushover](https://pushover.net/clients)（App Store）  
-2. 註冊 https://pushover.net/ → 複製 **User Key**  
-3. 網站建立 Application → 複製 **API Token/Key**  
-4. GitHub secrets：  
-   - `PUSHOVER_USER_KEY`  
-   - `PUSHOVER_API_TOKEN`  
-5. iPhone：**設定 → 通知 → Pushover → 打開 Critical Alerts（緊急通知）**  
-6. Actions → Flight price watch → 勾 **test_push** → 測聲音（靜音鍵可維持開啟）
-
-達標會用 **Emergency** 優先級（會重複提醒直到確認）。
+（電量捷徑也是自動化，別人無法替你綁「你的電量」。）
 
 ---
 
-## 方案 B：ntfy（免費）
+## 步驟 A：一鍵安裝「播聲音」捷徑
 
-1. 裝 [ntfy](https://ntfy.sh/)  
+點這個安裝（公開的 Play Sound）：  
+https://www.icloud.com/shortcuts/aea24c9316094248aa2834b4fc0d302f  
+
+安裝後可改名成：`機票達標警報`  
+（可再編輯捷徑，加一個「朗讀文字：機票價格達標，請立刻查看」會更明顯。）
+
+---
+
+## 步驟 B：自己加「收到郵件」觸發（約 30 秒）
+
+1. 系統 **郵件** App 要有 GitHub 通知那個信箱（Gmail 也可加進「郵件」）  
+2. **捷徑 → 自動化 → ＋ → 製作個人自動化**  
+3. **郵件 → 收到郵件時**  
+   - 主旨包含：`機票達標`  
+4. 動作選：**執行捷徑** → 選 `機票達標警報`（或剛裝的 Play Sound）  
+5. **關掉「執行前詢問」** → 完成  
+
+之後達標信一來會播聲音；**靜音鍵開著通常也聽得到**（同電量捷徑的「播放聲音」）。
+
+---
+
+## 另一個「別人做好的」免費方案：ntfy App
+
+1. App Store 搜尋安裝 **ntfy**（免費）  
 2. 訂閱難猜 topic，例如 `fand-flight-7k2m9x`  
-3. Secret：`NTFY_TOPIC` = 該名稱  
-4. iPhone：設定 → 通知 → ntfy → 允許通知，並開啟 **Critical Alerts**（若有）  
-5. App 內若有「Priority 5 = Critical」選項也打開  
-6. 勾 **test_push** 測試  
-
-我們會送 **Priority 5（max）**。
+3. GitHub secret：`NTFY_TOPIC` = 該名稱  
+4. 設定 → 通知 → ntfy → 打開 Critical Alerts（若有）  
+5. Actions 勾 **test_push** 測試  
 
 ---
 
-## Discord（已可用，當備份）
+## Discord
 
-- `DISCORD_WEBHOOK_URL`、建議 `DISCORD_USER_ID`（純數字）  
-- 靜音鍵開著：頻道會有字，但**別指望鈴聲**
+繼續當文字備份；靜音鍵下通常不響。
 
 ---
 
-## 測試
+## 為什麼我不直接給你「收到郵件就響」的完整連結？
 
-1. 合併含 Pushover／ntfy 的 PR  
-2. 設好 secret  
-3. https://github.com/ibconsider/ai/actions/workflows/flight-watch.yml  
-4. **Run workflow** → 勾 **test_push**  
-5. **保持靜音鍵開啟**，看 Pushover／ntfy 會不會響
+因為自動化要綁**你的信箱**，Apple 也不讓這類完整自動化像一般捷徑一樣隨便公開安裝。  
+上面「裝捷徑 + 自己加郵件觸發」已經是最短、免費、又能在靜音鍵下響的做法。
