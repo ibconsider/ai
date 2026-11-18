@@ -9,41 +9,20 @@
 
 允許多次轉機。各市場原幣報價換算成台幣後取最低。達標時會：
 
-1. **手機推播（ntfy，可開提示聲）** ← 請務必設定，比 email 快
-2. 開／更新 GitHub Issue（`flight-alert`）
+1. **手機推播（Telegram / ntfy / Discord）** ← 必做，email 沒聲音
+2. 開／更新 GitHub Issue（`flight-alert`，僅備份）
 
-排程：**約每 2 小時一次**（UTC `0 */2 * * *`；芬蘭冬季約整天整點偶數時），一天約 12 次。GitHub 排程可能略延遲。
+排程：**約每 2 小時一次**。GitHub 排程常會晚跑，所以更要靠 App 推播，不能靠 email。
 
 ## 手機提示聲（必做）
 
-GitHub / Gmail 信件常常沒聲音。改用免費 **ntfy** 推播：
+完整步驟見 **[NOTIFY.md](./NOTIFY.md)**（Telegram 最推薦）。
 
-### A. 手機
+摘要：
 
-1. 安裝 [ntfy](https://ntfy.sh/)（[Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy) / [iOS](https://apps.apple.com/app/ntfy/id1625396347)）
-2. App 內 **Subscribe to topic**
-3. Topic 自己取一個**很難猜**的名稱，例如 `fand-tpe-hel-7k2m9x`（不要用公開字串）
-4. 系統通知權限：**允許**，並打開**聲音／橫幅／鎖定畫面**
-5. 在該 topic 設定裡把 **Priority**／緊急通知打開（Android 可設為高優先通知頻道）
-
-### B. GitHub Secret
-
-1. https://github.com/ibconsider/ai/settings/secrets/actions  
-2. **New repository secret**  
-3. Name：`NTFY_TOPIC`  
-4. Value：你在 App 訂閱的那個 topic 名稱（只要名稱，不要整段 URL）  
-5. Save  
-
-（可選）若你用 ntfy 付費／自架並開了 access token，再加 secret `NTFY_TOKEN`。
-
-### C. 測試聲音
-
-1. 合併本 PR 後打開 https://github.com/ibconsider/ai/actions/workflows/flight-watch.yml  
-2. **Run workflow**  
-3. 勾選 **test_push** → Run  
-4. 手機應立刻響／跳出「機票監控測試推播」
-
-之後真實達標會用 **urgent** 優先級推播，點通知可直達 Google Flights。
+1. **先合併** https://github.com/ibconsider/ai/pull/4（沒合併＝永遠只有 email）
+2. 設定 `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`（或 `NTFY_TOPIC`）
+3. Actions → 勾 **test_push** 確認手機會響
 
 ## Travelpayouts token（若尚未設定）
 

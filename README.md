@@ -6,6 +6,7 @@
 
 - **約每 2 小時**查價（一天約 12 次）
 - **TPE → HEL** &lt; 18,000 TWD；**TPE → IST** &lt; 10,000 TWD
-- 達標：**ntfy 手機推播（提示聲）** + GitHub Issue
+- 達標：**Telegram／ntfy 手機推播**（不要只靠 email）
 
-Secrets：`TRAVELPAYOUTS_TOKEN`、`NTFY_TOPIC`
+請先合併 PR #4，再依 [`flight-watch/NOTIFY.md`](./flight-watch/NOTIFY.md) 設定。  
+Secrets：`TRAVELPAYOUTS_TOKEN`，以及 `TELEGRAM_BOT_TOKEN`+`TELEGRAM_CHAT_ID`（和／或 `NTFY_TOPIC`）

@@ -6,7 +6,7 @@ import { loadRatesToTwd, toTwd } from "./lib/fx.mjs";
 import { searchRouteMarket } from "./lib/travelpayouts.mjs";
 import { buildVerifyLinks } from "./lib/links.mjs";
 import { createOrUpdateAlertIssue, ensureLabel } from "./lib/github.mjs";
-import { sendNtfyAlert } from "./lib/ntfy.mjs";
+import { notifyAllChannels } from "./lib/notify-all.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const config = JSON.parse(readFileSync(join(__dirname, "config.json"), "utf8"));
@@ -196,26 +196,22 @@ async function main() {
       });
       console.log("[notify:github]", r.routeId, result);
 
-      // Phone push with sound (ntfy) — do this even if GitHub issue step had issues.
+      // Phone channels (Telegram / ntfy / Discord) — not GitHub email.
       const xfer =
         r.best.transfers === 0 ? "直飛" : `${r.best.transfers} 次轉機`;
-      try {
-        const push = await sendNtfyAlert({
-          title: `✈️ 機票達標 ${r.best.priceTwd.toLocaleString()} TWD`,
-          message: [
-            `${r.label}`,
-            `${route.origin}→${route.destination}｜${r.best.departDate}｜${xfer}`,
-            `${r.best.price.toLocaleString()} ${r.best.currency} ≈ ${r.best.priceTwd.toLocaleString()} TWD`,
-            `立刻打開連結確認／下訂（快取價會過期）`,
-            links.googleFlights,
-          ].join("\n"),
-          clickUrl: links.googleFlights,
-          priority: "urgent",
-        });
-        console.log("[notify:ntfy]", r.routeId, push);
-      } catch (err) {
-        console.error("[notify:ntfy] failed", r.routeId, err);
-      }
+      const push = await notifyAllChannels({
+        title: `✈️ 機票達標 ${r.best.priceTwd.toLocaleString()} TWD`,
+        message: [
+          `${r.label}`,
+          `${route.origin}→${route.destination}｜${r.best.departDate}｜${xfer}`,
+          `${r.best.price.toLocaleString()} ${r.best.currency} ≈ ${r.best.priceTwd.toLocaleString()} TWD`,
+          `立刻打開連結確認／下訂（快取價會過期）`,
+          links.googleFlights,
+        ].join("\n"),
+        clickUrl: links.googleFlights,
+        priority: "urgent",
+      });
+      console.log("[notify:push]", r.routeId, push);
     }
   }
 
