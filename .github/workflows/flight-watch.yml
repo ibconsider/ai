@@ -43,6 +43,7 @@ jobs:
           node --check flight-watch/lib/ntfy.mjs
           node --check flight-watch/lib/telegram.mjs
           node --check flight-watch/lib/discord.mjs
+          node --check flight-watch/lib/pushover.mjs
           node --check flight-watch/lib/notify-all.mjs
           node --check flight-watch/test-push.mjs
           node flight-watch/check.mjs --dry-run
@@ -79,6 +80,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+          PUSHOVER_API_TOKEN: ${{ secrets.PUSHOVER_API_TOKEN }}
+          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
+          PUSHOVER_SOUND: ${{ secrets.PUSHOVER_SOUND }}
         run: node flight-watch/test-push.mjs
 
       - name: Run flight watch
@@ -94,6 +98,9 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+          PUSHOVER_API_TOKEN: ${{ secrets.PUSHOVER_API_TOKEN }}
+          PUSHOVER_USER_KEY: ${{ secrets.PUSHOVER_USER_KEY }}
+          PUSHOVER_SOUND: ${{ secrets.PUSHOVER_SOUND }}
           SHOULD_NOTIFY: ${{ github.event_name == 'schedule' && 'true' || inputs.notify }}
         run: |
           if [ "$SHOULD_NOTIFY" = "true" ]; then
