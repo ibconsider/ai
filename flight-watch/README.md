@@ -16,11 +16,12 @@
 
 ## 手機提示聲（必做）
 
-完整步驟見 **[NOTIFY.md](./NOTIFY.md)**。
+完整步驟見 **[NOTIFY.md](./NOTIFY.md)**（**免費**）。
 
-- **Discord**：達標會有訊息；**iPhone 靜音鍵開著通常不響**（和 Cursor／鬧鐘不同）  
-- **要靜音鍵也響**：設 **Pushover**（最穩）或 **ntfy Critical**  
-- 設好後 Actions 勾 **test_push** 測試
+- **Discord**：達標會有訊息；靜音鍵開著通常不響  
+- **要靜音鍵也響（免費）**：  
+  1. iPhone **捷徑**：收到主旨含「機票達標」的郵件 → 播放聲音（同電量捷徑原理）  
+  2. 或免費 **ntfy** + Critical Alerts
 
 ## Travelpayouts token（若尚未設定）
 
