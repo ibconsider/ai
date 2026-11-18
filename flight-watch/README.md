@@ -16,13 +16,11 @@
 
 ## 手機提示聲（必做）
 
-完整步驟見 **[NOTIFY.md](./NOTIFY.md)**（**Discord** 即可，不必 Telegram）。
+完整步驟見 **[NOTIFY.md](./NOTIFY.md)**。
 
-摘要：
-
-1. **先合併** https://github.com/ibconsider/ai/pull/4（沒合併＝永遠只有 email）
-2. 設定 `DISCORD_WEBHOOK_URL`（建議再加 `DISCORD_USER_ID` 以便 @你）
-3. Actions → 勾 **test_push** 確認 Discord 手機會響
+- **Discord**：達標會有訊息；**iPhone 靜音鍵開著通常不響**（和 Cursor／鬧鐘不同）  
+- **要靜音鍵也響**：設 **Pushover**（最穩）或 **ntfy Critical**  
+- 設好後 Actions 勾 **test_push** 測試
 
 ## Travelpayouts token（若尚未設定）
 

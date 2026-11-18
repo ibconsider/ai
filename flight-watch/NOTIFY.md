@@ -1,60 +1,58 @@
-# 手機提示聲設定（Discord）
+# 手機提示聲（iPhone 靜音鍵開著也要響）
 
-## 為什麼 email 沒聲音？
+## 為什麼 Discord／Cursor 不一樣？
 
-**PR #4 沒合併前**，達標只會開 GitHub Issue → 寄 email。Gmail 常常沒提示聲，Actions 也常晚跑。
-
-請改用 **Discord App 推播**。
-
----
-
-## 今天請做
-
-### ① 合併 PR
-
-https://github.com/ibconsider/ai/pull/4
-
-### ② 建立 Discord Webhook
-
-1. 打開 Discord（電腦或手機都行）
-2. 進你的伺服器 → 選一個頻道（建議新建 `#flight-alerts`）
-3. 頻道設定 → **整合 / Integrations** → **Webhook** → **新 Webhook**
-4. 複製 **Webhook URL**（形如 `https://discord.com/api/webhooks/...`）
-
-### ③ 存進 GitHub Secret
-
-1. https://github.com/ibconsider/ai/settings/secrets/actions  
-2. **New repository secret**  
-3. Name：`DISCORD_WEBHOOK_URL`  
-4. Value：貼上整段 Webhook URL → Save  
-
-### ④（強烈建議）讓通知 @你 — 比較會響
-
-1. Discord 開啟「開發者模式」：設定 → 進階 → 開發者模式  
-2. 右鍵自己的頭像 → **複製使用者 ID**  
-3. 新增／更新 secret：`DISCORD_USER_ID` = **只有數字**（約 17–20 位，不要加引號、空格、`<@...>`）  
-4. 你必須已加入該 Webhook 所在的伺服器，@ 才會成功  
-
-若 ID 不對，系統會改成不 @ 你仍發送訊息。
-
-### ⑤ 打開 Discord 手機通知
-
-- Discord App → 設定 → 通知 → 開啟  
-- 該伺服器／`#flight-alerts`：**不要靜音**  
-- 系統層級允許 Discord 通知聲音；上課勿擾可把 Discord 設成例外  
-
-### ⑥ 測試
-
-1. https://github.com/ibconsider/ai/actions/workflows/flight-watch.yml  
-2. **Run workflow** → 勾選 **test_push** → Run  
-3. 手機 Discord 應立刻跳出「機票監控測試推播」
-
----
-
-## 可選備援
-
-| Secret | 用途 |
+| 來源 | 靜音鍵開著 |
 | --- | --- |
-| `NTFY_TOPIC` | 另裝 ntfy App 再加一層 |
+| **鬧鐘** | 會響（系統鬧鐘通道） |
+| **Cursor 跑完提示音** | 常會響（App 內媒體音，不是一般通知鈴） |
+| **Discord 通知** | **通常不響**（一般推播，遵守靜音鍵） |
 
-不必設 Telegram。
+所以：**Discord 適合「有訊息」**；要「靜音鍵開著也響」請加 **Pushover** 或 **ntfy Critical**。
+
+Discord 可繼續留著當備份（達標仍會在頻道出現）。
+
+---
+
+## 方案 A：Pushover（最穩，約一次買斷）
+
+1. 手機裝 [Pushover](https://pushover.net/clients)（App Store）  
+2. 註冊 https://pushover.net/ → 複製 **User Key**  
+3. 網站建立 Application → 複製 **API Token/Key**  
+4. GitHub secrets：  
+   - `PUSHOVER_USER_KEY`  
+   - `PUSHOVER_API_TOKEN`  
+5. iPhone：**設定 → 通知 → Pushover → 打開 Critical Alerts（緊急通知）**  
+6. Actions → Flight price watch → 勾 **test_push** → 測聲音（靜音鍵可維持開啟）
+
+達標會用 **Emergency** 優先級（會重複提醒直到確認）。
+
+---
+
+## 方案 B：ntfy（免費）
+
+1. 裝 [ntfy](https://ntfy.sh/)  
+2. 訂閱難猜 topic，例如 `fand-flight-7k2m9x`  
+3. Secret：`NTFY_TOPIC` = 該名稱  
+4. iPhone：設定 → 通知 → ntfy → 允許通知，並開啟 **Critical Alerts**（若有）  
+5. App 內若有「Priority 5 = Critical」選項也打開  
+6. 勾 **test_push** 測試  
+
+我們會送 **Priority 5（max）**。
+
+---
+
+## Discord（已可用，當備份）
+
+- `DISCORD_WEBHOOK_URL`、建議 `DISCORD_USER_ID`（純數字）  
+- 靜音鍵開著：頻道會有字，但**別指望鈴聲**
+
+---
+
+## 測試
+
+1. 合併含 Pushover／ntfy 的 PR  
+2. 設好 secret  
+3. https://github.com/ibconsider/ai/actions/workflows/flight-watch.yml  
+4. **Run workflow** → 勾 **test_push**  
+5. **保持靜音鍵開啟**，看 Pushover／ntfy 會不會響

@@ -4,7 +4,7 @@ import { notifyAllChannels } from "./lib/notify-all.mjs";
 const result = await notifyAllChannels({
   title: "✈️ 機票監控測試推播",
   message:
-    "若手機響了／跳出這則，提示聲設定成功。之後達標會用同樣管道立刻通知（不要只靠 email）。",
+    "若 iPhone 靜音鍵開著仍聽到聲音，代表 Critical／Pushover 設定成功。Discord 在靜音模式下通常不會響（和 Cursor 完成音不同）。",
   clickUrl: "https://github.com/ibconsider/ai/issues?q=label%3Aflight-alert",
   priority: "urgent",
 });
@@ -13,11 +13,10 @@ console.log(JSON.stringify(result, null, 2));
 
 if (!result.sent.length) {
   console.error(
-    "\n沒有任何手機管道送出。請至少設定一組：\n" +
-      "- TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID（建議）\n" +
-      "- 或 NTFY_TOPIC\n" +
-      "- 或 DISCORD_WEBHOOK_URL\n" +
-      "並確認已合併 PR #4 後再跑 test_push。"
+    "\n沒有任何手機管道送出。靜音鍵仍要響請設：\n" +
+      "- PUSHOVER_API_TOKEN + PUSHOVER_USER_KEY（最穩）\n" +
+      "- 或 NTFY_TOPIC（iOS 開 Critical Alerts）\n" +
+      "Discord 可留著看訊息，但靜音鍵開著通常沒鈴聲。"
   );
   process.exit(1);
 }

@@ -6,7 +6,6 @@
 
 - **約每 2 小時**查價（一天約 12 次）
 - **TPE → HEL** &lt; 18,000 TWD；**TPE → IST** &lt; 10,000 TWD
-- 達標：**Discord 手機推播**（不要只靠 email）
+- 達標：Discord（有訊息）+ 可選 **Pushover／ntfy**（靜音鍵開著也要響）
 
-請先合併 PR #4，再依 [`flight-watch/NOTIFY.md`](./flight-watch/NOTIFY.md) 設定。  
-Secrets：`TRAVELPAYOUTS_TOKEN`、`DISCORD_WEBHOOK_URL`（建議加 `DISCORD_USER_ID`）
+設定見 [`flight-watch/NOTIFY.md`](./flight-watch/NOTIFY.md)。

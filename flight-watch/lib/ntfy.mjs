@@ -1,6 +1,7 @@
 /**
- * Instant phone push via ntfy.sh (free). Install the ntfy app and subscribe
- * to your private topic; Priority "urgent"/"high" triggers sound/vibration.
+ * Instant phone push via ntfy.sh (free).
+ * Priority 5 / max can become iOS Critical Alerts (rings with Silent switch on)
+ * if the ntfy iOS app has Critical Alerts enabled.
  * Docs: https://docs.ntfy.sh/publish/
  */
 
@@ -16,8 +17,8 @@ export async function sendNtfyAlert({
   title,
   message,
   clickUrl,
-  priority = "urgent",
-  tags = ["airplane", "warning"],
+  priority = "max",
+  tags = ["airplane", "warning", "rotating_light"],
 }) {
   const url = topicUrl();
   if (!url) {
@@ -25,14 +26,18 @@ export async function sendNtfyAlert({
     return { skipped: true, reason: "missing_NTFY_TOPIC" };
   }
 
+  // Use numeric 5 as well as "max" — iOS maps prio 5 → critical when allowed.
   const headers = {
     Title: title,
-    Priority: String(priority),
+    Priority: "5",
     Tags: tags.join(","),
+    // Help some clients treat as time-sensitive / critical.
+    "X-Priority": "5",
   };
+  if (priority && priority !== "max" && priority !== "urgent") {
+    headers.Priority = String(priority);
+  }
   if (clickUrl) headers.Click = clickUrl;
-  // Android / iOS: request sound; urgent already forces attention on most builds.
-  headers["X-Priority"] = String(priority === "urgent" ? 5 : 4);
 
   const token = process.env.NTFY_TOKEN?.trim();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -48,5 +53,5 @@ export async function sendNtfyAlert({
     throw new Error(`ntfy HTTP ${res.status}: ${text}`);
   }
 
-  return { sent: true, status: res.status };
+  return { sent: true, status: res.status, priority: 5 };
 }
