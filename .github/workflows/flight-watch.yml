@@ -2,14 +2,19 @@ name: Flight price watch
 
 on:
   schedule:
-    # Every day 09:00 Asia/Taipei (UTC+8) = 01:00 UTC
-    - cron: "0 1 * * *"
+    # Every 2 hours (UTC). GitHub schedule often runs late (minutes–hours);
+    # phone push (Telegram/ntfy) still fires as soon as the job actually runs.
+    - cron: "0 */2 * * *"
   workflow_dispatch:
     inputs:
       notify:
-        description: "Create/update GitHub issues when under threshold"
+        description: "GitHub issue + phone push when under threshold"
         type: boolean
         default: true
+      test_push:
+        description: "Test phone push only (Telegram/ntfy/Discord) — no price check"
+        type: boolean
+        default: false
   pull_request:
     paths:
       - "flight-watch/**"
@@ -35,6 +40,11 @@ jobs:
           node --check flight-watch/lib/travelpayouts.mjs
           node --check flight-watch/lib/links.mjs
           node --check flight-watch/lib/github.mjs
+          node --check flight-watch/lib/ntfy.mjs
+          node --check flight-watch/lib/telegram.mjs
+          node --check flight-watch/lib/discord.mjs
+          node --check flight-watch/lib/notify-all.mjs
+          node --check flight-watch/test-push.mjs
           node flight-watch/check.mjs --dry-run
 
   check:
@@ -50,22 +60,40 @@ jobs:
           node-version: "22"
 
       - name: Require Travelpayouts token
+        if: ${{ inputs.test_push != true }}
         env:
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
         run: |
           if [ -z "$TRAVELPAYOUTS_TOKEN" ]; then
             echo "::error::Missing repository secret TRAVELPAYOUTS_TOKEN"
-            echo "1. Free signup: https://www.travelpayouts.com/"
-            echo "2. Copy API token from profile"
-            echo "3. Repo Settings → Secrets and variables → Actions → New secret → TRAVELPAYOUTS_TOKEN"
             exit 1
           fi
 
+      - name: Test phone push channels
+        if: ${{ inputs.test_push == true }}
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+        run: node flight-watch/test-push.mjs
+
       - name: Run flight watch
+        if: ${{ inputs.test_push != true }}
         env:
           TRAVELPAYOUTS_TOKEN: ${{ secrets.TRAVELPAYOUTS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_SERVER: ${{ secrets.NTFY_SERVER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
           SHOULD_NOTIFY: ${{ github.event_name == 'schedule' && 'true' || inputs.notify }}
         run: |
           if [ "$SHOULD_NOTIFY" = "true" ]; then
@@ -75,7 +103,7 @@ jobs:
           fi
 
       - name: Upload report
-        if: always()
+        if: ${{ always() && inputs.test_push != true }}
         uses: actions/upload-artifact@v4
         with:
           name: flight-watch-report

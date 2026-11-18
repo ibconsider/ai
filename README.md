@@ -1,12 +1,12 @@
 # ai
 
-## 機票價格自動監控
+## 機票價格自動監控（回程）
 
 見 [`flight-watch/README.md`](./flight-watch/README.md)。
 
-簡述：GitHub Actions 每天用 Travelpayouts 多市場（芬蘭 EUR／土耳其 TRY／台灣 TWD）追蹤
+- **約每 2 小時**查價（一天約 12 次）
+- **TPE → HEL** &lt; 18,000 TWD；**TPE → IST** &lt; 10,000 TWD
+- 達標：**Discord 手機推播**（不要只靠 email）
 
-- **TPE → HEL**（2027-01-10～02-03）&lt; **18,000 TWD**
-- **TPE → IST**（同區間）&lt; **10,000 TWD**
-
-達標會開 GitHub Issue（`flight-alert`）。請先設定 repo secret `TRAVELPAYOUTS_TOKEN`。
+請先合併 PR #4，再依 [`flight-watch/NOTIFY.md`](./flight-watch/NOTIFY.md) 設定。  
+Secrets：`TRAVELPAYOUTS_TOKEN`、`DISCORD_WEBHOOK_URL`（建議加 `DISCORD_USER_ID`）

@@ -6,6 +6,7 @@ import { loadRatesToTwd, toTwd } from "./lib/fx.mjs";
 import { searchRouteMarket } from "./lib/travelpayouts.mjs";
 import { buildVerifyLinks } from "./lib/links.mjs";
 import { createOrUpdateAlertIssue, ensureLabel } from "./lib/github.mjs";
+import { notifyAllChannels } from "./lib/notify-all.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const config = JSON.parse(readFileSync(join(__dirname, "config.json"), "utf8"));
@@ -164,10 +165,20 @@ async function main() {
     }
     for (const r of results) {
       if (!r.belowThreshold || !r.best) continue;
-      const marketCfg = r.best._marketCfg || r.best;
+      const route = config.routes.find((x) => x.id === r.routeId);
+      const marketCfg = r.best._marketCfg || {
+        label: r.best.market,
+        locale: "en",
+        currency: r.best.currency,
+        market: r.best.market,
+      };
+      const links = buildVerifyLinks(route, r.best, {
+        locale: marketCfg.locale || "en",
+        currency: r.best.currency,
+      });
       const title = `${config.alert.titlePrefix}｜${r.label}｜${r.best.priceTwd.toLocaleString()} TWD（${r.best.departDate}） [${r.routeId}]`;
       const body = buildIssueBody(
-        config.routes.find((x) => x.id === r.routeId),
+        route,
         r.best,
         {
           label: marketCfg.label || marketCfg.market,
@@ -183,7 +194,24 @@ async function main() {
         labels: config.alert.githubIssueLabels,
         routeId: r.routeId,
       });
-      console.log("[notify]", r.routeId, result);
+      console.log("[notify:github]", r.routeId, result);
+
+      // Phone channels (Telegram / ntfy / Discord) — not GitHub email.
+      const xfer =
+        r.best.transfers === 0 ? "直飛" : `${r.best.transfers} 次轉機`;
+      const push = await notifyAllChannels({
+        title: `✈️ 機票達標 ${r.best.priceTwd.toLocaleString()} TWD`,
+        message: [
+          `${r.label}`,
+          `${route.origin}→${route.destination}｜${r.best.departDate}｜${xfer}`,
+          `${r.best.price.toLocaleString()} ${r.best.currency} ≈ ${r.best.priceTwd.toLocaleString()} TWD`,
+          `立刻打開連結確認／下訂（快取價會過期）`,
+          links.googleFlights,
+        ].join("\n"),
+        clickUrl: links.googleFlights,
+        priority: "urgent",
+      });
+      console.log("[notify:push]", r.routeId, push);
     }
   }
 
