@@ -26,7 +26,9 @@ function pickBest(offers, rates) {
 
 function formatOfferLine(o) {
   const xfer = o.transfers === 0 ? "直飛" : `${o.transfers} 次轉機`;
-  return `- **${o.departDate}**｜${o.price.toLocaleString()} ${o.currency} ≈ **${o.priceTwd.toLocaleString()} TWD**｜${xfer}｜market=${o.market}｜來源=${o.source}`;
+  const dur =
+    o.durationHours == null ? "時長未知" : `${Number(o.durationHours).toFixed(1)} 小時`;
+  return `- **${o.departDate}**｜${o.price.toLocaleString()} ${o.currency} ≈ **${o.priceTwd.toLocaleString()} TWD**｜${xfer}｜${dur}｜market=${o.market}｜來源=${o.source}`;
 }
 
 function buildIssueBody(route, best, marketCfg, below) {
@@ -44,6 +46,8 @@ function buildIssueBody(route, best, marketCfg, below) {
     `| 約合台幣 | **${best.priceTwd.toLocaleString()} TWD** |`,
     `| 門檻 | ${route.thresholdTwd.toLocaleString()} TWD |`,
     `| 轉機 | ${best.transfers} |`,
+    `| 總時長 | ${best.durationHours == null ? "未知（下訂前請確認 ≤12h）" : `${Number(best.durationHours).toFixed(1)} 小時`} |`,
+    `| 時長上限 | ${route.maxDurationHours != null ? `${route.maxDurationHours} 小時` : "無"} |`,
     `| 查價市場 | ${marketCfg.label} (\`${best.market}\` / ${best.currency}) |`,
     "",
     "### 用當地語系／貨幣人工核價（通常較準）",
@@ -63,22 +67,24 @@ async function checkRoute(route, rates) {
 
   for (const marketCfg of route.markets) {
     try {
+      const range = route.dateRange || config.dateRange;
       if (dryRun) {
         // Synthetic sample so CI can exercise formatting without a token.
+        const cur = marketCfg.currency.toLowerCase();
+        let price;
+        if (cur === "twd") price = route.thresholdTwd * 0.9;
+        else if (cur === "eur") price = Math.round((route.thresholdTwd * 0.85) / rates.EUR);
+        else if (cur === "try") price = Math.round((route.thresholdTwd * 0.8) / rates.TRY);
+        else if (cur === "jpy") price = Math.round((route.thresholdTwd * 0.88) / (rates.JPY || 0.21));
+        else price = Math.round((route.thresholdTwd * 0.95) / (rates.USD || 30));
         all.push({
           source: "dry-run",
           market: marketCfg.market,
           currency: marketCfg.currency.toUpperCase(),
-          departDate: config.dateRange.start,
-          price:
-            marketCfg.currency.toLowerCase() === "twd"
-              ? route.thresholdTwd * 0.9
-              : marketCfg.currency.toLowerCase() === "eur"
-                ? Math.round((route.thresholdTwd * 0.85) / rates.EUR)
-                : marketCfg.currency.toLowerCase() === "try"
-                  ? Math.round((route.thresholdTwd * 0.8) / rates.TRY)
-                  : Math.round((route.thresholdTwd * 0.95) / (rates.USD || 30)),
+          departDate: range.start,
+          price,
           transfers: 1,
+          durationHours: route.maxDurationHours != null ? Math.min(6, route.maxDurationHours) : 8,
           airline: "XX",
           flightNumber: null,
           expiresAt: null,
@@ -88,7 +94,7 @@ async function checkRoute(route, rates) {
         continue;
       }
 
-      const offers = await searchRouteMarket(route, marketCfg, config.dateRange);
+      const offers = await searchRouteMarket(route, marketCfg, range);
       for (const o of offers) all.push({ ...o, _marketCfg: marketCfg });
     } catch (err) {
       errors.push({ market: marketCfg.market, message: String(err.message || err) });
@@ -116,7 +122,7 @@ async function main() {
     ...new Set(config.routes.flatMap((r) => r.markets.map((m) => m.currency.toUpperCase()))),
   ];
   const rates = dryRun
-    ? { TWD: 1, EUR: 36.27, TRY: 0.65, USD: 31.5 }
+    ? { TWD: 1, EUR: 36.27, TRY: 0.65, USD: 31.5, JPY: 0.21 }
     : await loadRatesToTwd(currencies);
 
   const results = [];
@@ -138,12 +144,16 @@ async function main() {
   writeFileSync(outPath, JSON.stringify(report, null, 2));
 
   console.log("=== 機票監控結果 ===");
-  console.log(`區間：${config.dateRange.start} → ${config.dateRange.end}`);
+  console.log(`預設區間：${config.dateRange.start} → ${config.dateRange.end}`);
   console.log(`匯率：${JSON.stringify(rates)}`);
   console.log("");
 
   for (const r of results) {
-    console.log(`## ${r.label}（門檻 ${r.thresholdTwd.toLocaleString()} TWD）`);
+    const route = config.routes.find((x) => x.id === r.routeId);
+    const range = route?.dateRange || config.dateRange;
+    console.log(
+      `## ${r.label}（門檻 ${r.thresholdTwd.toLocaleString()} TWD｜${range.start}→${range.end}${route?.maxDurationHours != null ? `｜≤${route.maxDurationHours}h` : ""}）`
+    );
     if (r.errors.length) {
       console.log("錯誤：", r.errors);
     }

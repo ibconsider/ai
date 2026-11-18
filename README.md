@@ -5,7 +5,8 @@
 見 [`flight-watch/README.md`](./flight-watch/README.md)。
 
 - **約每 2 小時**查價（一天約 12 次）
-- **TPE → HEL** &lt; 18,000 TWD；**TPE → IST** &lt; 10,000 TWD
-- 達標：Discord（有訊息）+ **免費**：捷徑播聲音／ntfy（靜音鍵也可響）
+- **TPE → HEL** &lt; 18,000；**TPE → IST** &lt; 10,000
+- **TPE → HIJ（2027-01-11）**、**HIJ → TPE（2027-01-16）** &lt; 7,000 且總時長 ≤12h
+- 達標：Discord＋捷徑／ntfy
 
 設定見 [`flight-watch/NOTIFY.md`](./flight-watch/NOTIFY.md)。
