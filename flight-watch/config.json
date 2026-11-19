@@ -36,14 +36,14 @@
       ]
     },
     {
-      "id": "tpe-hij-0111",
+      "id": "tpe-hij-0115",
       "label": "台北 → 廣島",
       "origin": "TPE",
       "destination": "HIJ",
       "thresholdTwd": 7000,
       "allowTransfers": true,
       "maxDurationHours": 12,
-      "dateRange": { "start": "2027-01-11", "end": "2027-01-11" },
+      "dateRange": { "start": "2027-01-15", "end": "2027-01-15" },
       "markets": [
         { "market": "jp", "currency": "jpy", "locale": "ja", "label": "日本站 (JPY)" },
         { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
@@ -51,14 +51,14 @@
       ]
     },
     {
-      "id": "hij-tpe-0116",
+      "id": "hij-tpe-0120",
       "label": "廣島 → 台北",
       "origin": "HIJ",
       "destination": "TPE",
       "thresholdTwd": 7000,
       "allowTransfers": true,
       "maxDurationHours": 12,
-      "dateRange": { "start": "2027-01-16", "end": "2027-01-16" },
+      "dateRange": { "start": "2027-01-20", "end": "2027-01-20" },
       "markets": [
         { "market": "jp", "currency": "jpy", "locale": "ja", "label": "日本站 (JPY)" },
         { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
