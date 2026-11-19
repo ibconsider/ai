@@ -6,7 +6,7 @@
   "notes": "Outbound to Taiwan already booked; watch return legs TPE→HEL / TPE→IST.",
   "dateRange": {
     "start": "2027-01-10",
-    "end": "2027-02-03"
+    "end": "2027-02-15"
   },
   "routes": [
     {
@@ -27,7 +27,7 @@
       "label": "回程｜台灣 → 土耳其",
       "origin": "TPE",
       "destination": "IST",
-      "thresholdTwd": 10000,
+      "thresholdTwd": 13500,
       "allowTransfers": true,
       "markets": [
         { "market": "tr", "currency": "try", "locale": "tr", "label": "土耳其站 (TRY)" },
