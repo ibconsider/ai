@@ -42,4 +42,6 @@ NTFY_TOPIC=your-topic node flight-watch/test-ntfy.mjs
 ## 注意
 
 - Travelpayouts 是快取價（約 2–7 天），**推播後請立刻點連結確認可訂價**。
+- 每次會掃完整日期區間（不是首日達標就停）；通知會列出**所有快取裡低於門檻的日期**，並附預填日期的 Google Flights 連結（`tfs=`，舊的 `#flt=` 已失效）。
+- 遠期航線快取常不完整：Google 現場看得到的日期，若快取沒有，就不會出現在達標清單。
 - 匯率：`@fawazahmed0/currency-api`（免費）。

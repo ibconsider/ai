@@ -1,15 +1,23 @@
 /**
  * Deep links that open Google Flights / Aviasales in destination-local language + currency.
  * These are for human verification — pricing often differs by POS/locale.
+ *
+ * Google Flights: classic `#flt=` fragments are deprecated and often open a blank
+ * search form. Prefer the modern `tfs=` protobuf token; keep a `q=` text fallback.
  */
+import {
+  googleFlightsSearchUrl,
+  googleFlightsQueryUrl,
+} from "./google-flights-tfs.mjs";
+
 export function googleFlightsUrl({ origin, destination, date, currency, hl }) {
-  const params = new URLSearchParams({
+  return googleFlightsSearchUrl({
+    origin,
+    destination,
+    date,
+    currency,
     hl,
-    curr: currency.toUpperCase(),
   });
-  // Hash fragment keeps the classic one-way search shape used by Flights.
-  const hash = `flt=${origin}.${destination}.${date};c:${currency.toUpperCase()};e:1;sd:1;t:f;tt:o`;
-  return `https://www.google.com/travel/flights?${params.toString()}#${hash}`;
 }
 
 export function aviasalesUrl({ origin, destination, date, locale, currency }) {
@@ -32,14 +40,16 @@ export function aviasalesUrl({ origin, destination, date, locale, currency }) {
 }
 
 export function buildVerifyLinks(route, offer, marketCfg) {
+  const common = {
+    origin: route.origin,
+    destination: route.destination,
+    date: offer.departDate,
+    currency: marketCfg.currency,
+    hl: marketCfg.locale,
+  };
   return {
-    googleFlights: googleFlightsUrl({
-      origin: route.origin,
-      destination: route.destination,
-      date: offer.departDate,
-      currency: marketCfg.currency,
-      hl: marketCfg.locale,
-    }),
+    googleFlights: googleFlightsUrl(common),
+    googleFlightsFallback: googleFlightsQueryUrl(common),
     aviasales: aviasalesUrl({
       origin: route.origin,
       destination: route.destination,
