@@ -58,6 +58,32 @@ function inRange(dateIso, start, end) {
   return dateIso >= start && dateIso <= end;
 }
 
+/** Normalize API duration fields to hours (null if unknown). */
+function durationHoursFromRow(row) {
+  const raw =
+    row.duration ??
+    row.flight_duration ??
+    row.duration_to ??
+    row.time ??
+    null;
+  if (raw == null || raw === "") return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  // Travelpayouts usually uses minutes for duration.
+  if (n > 48) return n / 60;
+  return n;
+}
+
+function passesDuration(route, hours) {
+  const maxH = route.maxDurationHours;
+  if (maxH == null) return true;
+  if (hours == null) {
+    // Cache rows often omit duration; keep offer but mark unknown.
+    return true;
+  }
+  return hours <= maxH;
+}
+
 /**
  * Fetch cheapest one-way quotes for a route/market across the date window.
  * Uses month-matrix (grouped by transfers) then falls back to cheap calendar.
@@ -87,6 +113,8 @@ export async function searchRouteMarket(route, marketCfg, dateRange) {
       if (!allowTransfers && transfers > 0) continue;
       const price = Number(row.value ?? row.price);
       if (!Number.isFinite(price) || price <= 0) continue;
+      const durationHours = durationHoursFromRow(row);
+      if (!passesDuration(route, durationHours)) continue;
       offers.push({
         source: "month-matrix",
         market,
@@ -94,6 +122,7 @@ export async function searchRouteMarket(route, marketCfg, dateRange) {
         departDate: depart,
         price,
         transfers,
+        durationHours,
         airline: row.airline || null,
         flightNumber: row.flight_number || null,
         expiresAt: row.expires_at || null,
@@ -123,6 +152,8 @@ export async function searchRouteMarket(route, marketCfg, dateRange) {
       if (!allowTransfers && transfers > 0) continue;
       const price = Number(row.price ?? row.value);
       if (!Number.isFinite(price) || price <= 0) continue;
+      const durationHours = durationHoursFromRow(row);
+      if (!passesDuration(route, durationHours)) continue;
       offers.push({
         source: "cheap",
         market,
@@ -130,6 +161,7 @@ export async function searchRouteMarket(route, marketCfg, dateRange) {
         departDate: depart,
         price,
         transfers,
+        durationHours,
         airline: row.airline || null,
         flightNumber: row.flight_number || null,
         expiresAt: row.expires_at || null,

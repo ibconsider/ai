@@ -3,7 +3,7 @@
   "tripType": "one_way",
   "cabin": "Economy",
   "adults": 1,
-  "notes": "Outbound to Taiwan already booked; watch return legs TPE→HEL / TPE→IST.",
+  "notes": "Watch Europe return legs plus Taipei↔Hiroshima day fares.",
   "dateRange": {
     "start": "2027-01-10",
     "end": "2027-02-03"
@@ -31,6 +31,36 @@
       "allowTransfers": true,
       "markets": [
         { "market": "tr", "currency": "try", "locale": "tr", "label": "土耳其站 (TRY)" },
+        { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
+        { "market": "us", "currency": "usd", "locale": "en", "label": "美國站 (USD)" }
+      ]
+    },
+    {
+      "id": "tpe-hij-0115",
+      "label": "台北 → 廣島",
+      "origin": "TPE",
+      "destination": "HIJ",
+      "thresholdTwd": 7000,
+      "allowTransfers": true,
+      "maxDurationHours": 12,
+      "dateRange": { "start": "2027-01-15", "end": "2027-01-15" },
+      "markets": [
+        { "market": "jp", "currency": "jpy", "locale": "ja", "label": "日本站 (JPY)" },
+        { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
+        { "market": "us", "currency": "usd", "locale": "en", "label": "美國站 (USD)" }
+      ]
+    },
+    {
+      "id": "hij-tpe-0120",
+      "label": "廣島 → 台北",
+      "origin": "HIJ",
+      "destination": "TPE",
+      "thresholdTwd": 7000,
+      "allowTransfers": true,
+      "maxDurationHours": 12,
+      "dateRange": { "start": "2027-01-20", "end": "2027-01-20" },
+      "markets": [
+        { "market": "jp", "currency": "jpy", "locale": "ja", "label": "日本站 (JPY)" },
         { "market": "tw", "currency": "twd", "locale": "zh", "label": "台灣站 (TWD)" },
         { "market": "us", "currency": "usd", "locale": "en", "label": "美國站 (USD)" }
       ]
