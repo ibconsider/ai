@@ -24,37 +24,88 @@ function pickBest(offers, rates) {
   return scored;
 }
 
+/** Cheapest offer per depart date that is under the TWD threshold. */
+function belowThresholdByDate(ranked, thresholdTwd) {
+  const byDate = new Map();
+  for (const o of ranked) {
+    if (!(o.priceTwd < thresholdTwd)) continue;
+    const prev = byDate.get(o.departDate);
+    if (!prev || o.priceTwd < prev.priceTwd) byDate.set(o.departDate, o);
+  }
+  return [...byDate.values()].sort(
+    (a, b) => a.departDate.localeCompare(b.departDate) || a.priceTwd - b.priceTwd
+  );
+}
+
+function marketCfgOf(offer) {
+  return (
+    offer._marketCfg || {
+      label: offer.market,
+      locale: "en",
+      currency: offer.currency,
+      market: offer.market,
+    }
+  );
+}
+
 function formatOfferLine(o) {
   const xfer = o.transfers === 0 ? "直飛" : `${o.transfers} 次轉機`;
   return `- **${o.departDate}**｜${o.price.toLocaleString()} ${o.currency} ≈ **${o.priceTwd.toLocaleString()} TWD**｜${xfer}｜market=${o.market}｜來源=${o.source}`;
 }
 
-function buildIssueBody(route, best, marketCfg, below) {
+function formatBelowDateLine(route, o) {
+  const cfg = marketCfgOf(o);
+  const links = buildVerifyLinks(route, o, {
+    locale: cfg.locale || "en",
+    currency: o.currency,
+  });
+  const xfer = o.transfers === 0 ? "直飛" : `${o.transfers} 次轉機`;
+  return `- **${o.departDate}**｜${o.price.toLocaleString()} ${o.currency} ≈ **${o.priceTwd.toLocaleString()} TWD**｜${xfer}｜[Google Flights](${links.googleFlights}) · [備用連結](${links.googleFlightsFallback}) · [Aviasales](${links.aviasales})`;
+}
+
+function buildIssueBody(route, best, marketCfg, belowDates) {
   const links = buildVerifyLinks(route, best, marketCfg);
-  const status = below ? "✅ 已低於門檻" : "ℹ️ 尚未達標（摘要）";
-  return [
+  const status = belowDates.length ? "✅ 已低於門檻" : "ℹ️ 尚未達標（摘要）";
+  const lines = [
     `## ${route.label}（${route.origin} → ${route.destination}）`,
     "",
     status,
     "",
     `| 項目 | 值 |`,
     `| --- | --- |`,
-    `| 出發日 | ${best.departDate} |`,
-    `| 報價 | ${best.price.toLocaleString()} ${best.currency} |`,
+    `| 查詢區間 | ${config.dateRange.start} → ${config.dateRange.end} |`,
+    `| 最低出發日 | ${best.departDate} |`,
+    `| 最低報價 | ${best.price.toLocaleString()} ${best.currency} |`,
     `| 約合台幣 | **${best.priceTwd.toLocaleString()} TWD** |`,
     `| 門檻 | ${route.thresholdTwd.toLocaleString()} TWD |`,
     `| 轉機 | ${best.transfers} |`,
     `| 查價市場 | ${marketCfg.label} (\`${best.market}\` / ${best.currency}) |`,
+    `| 達標日期數 | ${belowDates.length}（區間內全部日期都會查；不是只查首日） |`,
     "",
-    "### 用當地語系／貨幣人工核價（通常較準）",
+    "### 達標日期一覽（區間內快取有價且低於門檻）",
     "",
-    `- [Google Flights（當地語系）](${links.googleFlights})`,
+  ];
+
+  if (belowDates.length === 0) {
+    lines.push("_目前快取沒有低於門檻的日期。_");
+  } else {
+    for (const o of belowDates) lines.push(formatBelowDateLine(route, o));
+  }
+
+  lines.push(
+    "",
+    "### 最低價快速核價連結",
+    "",
+    `- [Google Flights（當地語系，預填 ${best.departDate}）](${links.googleFlights})`,
+    `- [Google Flights 備用文字搜尋](${links.googleFlightsFallback})`,
     `- [Aviasales](${links.aviasales})`,
     "",
-    "_資料來自 Travelpayouts／Aviasales 快取（約 2–7 天），請以上方連結確認可訂價格。_",
+    "_資料來自 Travelpayouts／Aviasales 快取（約 2–7 天）。遠期航線快取常不完整——Google 現場可查到、但快取沒列出的日期，不會出現在上方清單。_",
     "",
-    `檢查時間（UTC）：${new Date().toISOString()}`,
-  ].join("\n");
+    `檢查時間（UTC）：${new Date().toISOString()}`
+  );
+
+  return lines.join("\n");
 }
 
 async function checkRoute(route, rates) {
@@ -64,27 +115,33 @@ async function checkRoute(route, rates) {
   for (const marketCfg of route.markets) {
     try {
       if (dryRun) {
-        // Synthetic sample so CI can exercise formatting without a token.
-        all.push({
-          source: "dry-run",
-          market: marketCfg.market,
-          currency: marketCfg.currency.toUpperCase(),
-          departDate: config.dateRange.start,
-          price:
-            marketCfg.currency.toLowerCase() === "twd"
-              ? route.thresholdTwd * 0.9
-              : marketCfg.currency.toLowerCase() === "eur"
-                ? Math.round((route.thresholdTwd * 0.85) / rates.EUR)
-                : marketCfg.currency.toLowerCase() === "try"
-                  ? Math.round((route.thresholdTwd * 0.8) / rates.TRY)
-                  : Math.round((route.thresholdTwd * 0.95) / (rates.USD || 30)),
-          transfers: 1,
-          airline: "XX",
-          flightNumber: null,
-          expiresAt: null,
-          gate: null,
-          _marketCfg: marketCfg,
-        });
+        // Synthetic samples on first + mid window so date listing is exercised.
+        const mid = config.dateRange.end;
+        for (const [departDate, factor] of [
+          [config.dateRange.start, 0.9],
+          [mid, 0.95],
+        ]) {
+          all.push({
+            source: "dry-run",
+            market: marketCfg.market,
+            currency: marketCfg.currency.toUpperCase(),
+            departDate,
+            price:
+              marketCfg.currency.toLowerCase() === "twd"
+                ? Math.round(route.thresholdTwd * factor)
+                : marketCfg.currency.toLowerCase() === "eur"
+                  ? Math.round((route.thresholdTwd * factor) / rates.EUR)
+                  : marketCfg.currency.toLowerCase() === "try"
+                    ? Math.round((route.thresholdTwd * factor) / rates.TRY)
+                    : Math.round((route.thresholdTwd * factor) / (rates.USD || 30)),
+            transfers: 1,
+            airline: "XX",
+            flightNumber: null,
+            expiresAt: null,
+            gate: null,
+            _marketCfg: marketCfg,
+          });
+        }
         continue;
       }
 
@@ -97,7 +154,10 @@ async function checkRoute(route, rates) {
 
   const ranked = pickBest(all, rates);
   const best = ranked[0] || null;
-  const below = Boolean(best && best.priceTwd < route.thresholdTwd);
+  const belowOffers = best
+    ? belowThresholdByDate(ranked, route.thresholdTwd)
+    : [];
+  const below = belowOffers.length > 0;
 
   return {
     routeId: route.id,
@@ -105,8 +165,19 @@ async function checkRoute(route, rates) {
     thresholdTwd: route.thresholdTwd,
     offerCount: ranked.length,
     best,
-    top: ranked.slice(0, 8),
+    top: ranked.slice(0, 20),
     belowThreshold: below,
+    /** Full offers (kept for notify link building). */
+    belowOffers,
+    belowDates: belowOffers.map((o) => ({
+      departDate: o.departDate,
+      price: o.price,
+      currency: o.currency,
+      priceTwd: o.priceTwd,
+      transfers: o.transfers,
+      market: o.market,
+      source: o.source,
+    })),
     errors,
   };
 }
@@ -155,6 +226,11 @@ async function main() {
     console.log(
       `最低：${r.best.price} ${r.best.currency} ≈ ${r.best.priceTwd} TWD（${r.best.departDate}，${r.best.transfers} 轉機，market=${r.best.market}）${r.belowThreshold ? " ← 達標" : ""}`
     );
+    if (r.belowDates?.length) {
+      console.log(
+        `達標日期（${r.belowDates.length}）：${r.belowDates.map((d) => d.departDate).join(", ")}`
+      );
+    }
     for (const line of r.top.map(formatOfferLine)) console.log(line);
     console.log("");
   }
@@ -166,12 +242,7 @@ async function main() {
     for (const r of results) {
       if (!r.belowThreshold || !r.best) continue;
       const route = config.routes.find((x) => x.id === r.routeId);
-      const marketCfg = r.best._marketCfg || {
-        label: r.best.market,
-        locale: "en",
-        currency: r.best.currency,
-        market: r.best.market,
-      };
+      const marketCfg = marketCfgOf(r.best);
       const links = buildVerifyLinks(route, r.best, {
         locale: marketCfg.locale || "en",
         currency: r.best.currency,
@@ -186,7 +257,7 @@ async function main() {
           currency: r.best.currency,
           market: r.best.market,
         },
-        true
+        r.belowOffers
       );
       const result = await createOrUpdateAlertIssue({
         title,
@@ -196,15 +267,19 @@ async function main() {
       });
       console.log("[notify:github]", r.routeId, result);
 
-      // Phone channels (Telegram / ntfy / Discord) — not GitHub email.
+      const dateList = r.belowDates
+        .map((d) => `${d.departDate}≈${d.priceTwd.toLocaleString()}TWD`)
+        .join("、");
       const xfer =
         r.best.transfers === 0 ? "直飛" : `${r.best.transfers} 次轉機`;
       const push = await notifyAllChannels({
         title: `✈️ 機票達標 ${r.best.priceTwd.toLocaleString()} TWD`,
         message: [
           `${r.label}`,
-          `${route.origin}→${route.destination}｜${r.best.departDate}｜${xfer}`,
+          `${route.origin}→${route.destination}｜最低 ${r.best.departDate}｜${xfer}`,
           `${r.best.price.toLocaleString()} ${r.best.currency} ≈ ${r.best.priceTwd.toLocaleString()} TWD`,
+          `達標日期 ${r.belowDates.length} 天：${dateList}`,
+          `區間 ${config.dateRange.start}→${config.dateRange.end}（會查完整區間，不是只查首日）`,
           `立刻打開連結確認／下訂（快取價會過期）`,
           links.googleFlights,
         ].join("\n"),
