@@ -21,7 +21,7 @@ GitHub Actions + ntfy 已負責查價與手機提示聲。若還想用 Cursor �
 
 航線與門檻：
 1) 回程｜台北 TPE → 赫爾辛基 HEL：低於 18000 TWD
-2) 回程｜台北 TPE → 伊斯坦堡 IST：低於 10000 TWD
+2) 回程｜台北 TPE → 伊斯坦堡 IST：低於 13500 TWD
 
 查價方式（務必做）：
 - 芬蘭線：Google Flights 用 hl=fi、curr=EUR
